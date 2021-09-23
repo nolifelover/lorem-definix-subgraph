@@ -48,7 +48,7 @@ export function handleNewPair(event: PairCreated): void {
     // bail if we couldn't figure out the decimals
     if (decimals === null) {
       log.debug('mybug the decimal on token 0 was null', [])
-      return
+      return;
     }
 
     token0.decimals = decimals
@@ -71,7 +71,7 @@ export function handleNewPair(event: PairCreated): void {
 
     // bail if we couldn't figure out the decimals
     if (decimals === null) {
-      return
+      return;
     }
     token1.decimals = decimals
     token1.derivedETH = ZERO_BD
