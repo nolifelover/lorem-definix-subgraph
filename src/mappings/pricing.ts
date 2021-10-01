@@ -1,40 +1,19 @@
+import { log } from '@graphprotocol/graph-ts';
 /* eslint-disable prefer-const */
 import { Pair, Token, Bundle } from '../types/schema'
 import { BigDecimal, Address, BigInt } from '@graphprotocol/graph-ts/index'
 import { ZERO_BD, factoryContract, ADDRESS_ZERO, ONE_BD } from './helpers'
 
 const WBNB_ADDRESS = '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c'
-const BUSD_WBNB_PAIR = '0x6af4c4433474b2f8ba385ad62b23299c82846783' // created block 7173211
-const DAI_WBNB_PAIR = '0x9938f3f25d2a4c8d38b829be9fd5f9554c3c900d'  // created block 7183251
-const USDT_WBNB_PAIR = '0x26782a2669d32be87c892ada10aa630d0834b3c4' // created block 7183335
+const BUSD_WBNB_PAIR = '0x18B8047DDd8b57F1C5Fd59bC57059E0C38e9fE09' // created block 6548017
 
 export function getEthPriceInUSD(): BigDecimal {
   // fetch eth prices for each stablecoin
-  let usdtPair = Pair.load(USDT_WBNB_PAIR) // usdt is token0
   let busdPair = Pair.load(BUSD_WBNB_PAIR) // busd is token1
-  let daiPair = Pair.load(DAI_WBNB_PAIR)   // dai is token0
 
-  // all 3 have been created
-  if (daiPair !== null && busdPair !== null && usdtPair !== null) {
-    let totalLiquidityBNB = daiPair.reserve1.plus(busdPair.reserve0).plus(usdtPair.reserve1)
-    let daiWeight = daiPair.reserve1.div(totalLiquidityBNB)
-    let busdWeight = busdPair.reserve0.div(totalLiquidityBNB)
-    let usdtWeight = usdtPair.reserve1.div(totalLiquidityBNB)
-    return daiPair.token0Price
-      .times(daiWeight)
-      .plus(busdPair.token1Price.times(busdWeight))
-      .plus(usdtPair.token0Price.times(usdtWeight))
-    // busd and usdt have been created
-  } else if (busdPair !== null && usdtPair !== null) {
-    let totalLiquidityBNB = busdPair.reserve0.plus(usdtPair.reserve1)
-    let busdWeight = busdPair.reserve0.div(totalLiquidityBNB)
-    let usdtWeight = usdtPair.reserve1.div(totalLiquidityBNB)
-    return busdPair.token1Price.times(busdWeight).plus(usdtPair.token0Price.times(usdtWeight))
-    // usdt is the only pair so far
-  } else if (busdPair !== null) {
+  // busd have been created
+  if (busdPair !== null) {
     return busdPair.token1Price
-  } else if (usdtPair !== null) {
-    return usdtPair.token0Price
   } else {
     return ZERO_BD
   }
@@ -53,7 +32,10 @@ let WHITELIST: string[] = [
   '0x2170ed0880ac9a755fd29b2688956bd959f933f8', // WETH
   '0x250632378e573c6be1ac2f97fcdf00515d0aa91b', // BETH
   '0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82', // CAKE
-  '0x1f546aD641B56b86fD9dCEAc473d1C7a357276B7', // PANTHER
+  '0x0F02b1F5AF54E04Fb6dd6550f009aC2429C4e30D', // FINIX
+  '0x070a9867ea49ce7afc4505817204860e823489fe', // SIX
+  '0x1d2f0da169ceb9fc7b3144628db156f3f6c60dbe', // XRP
+  '0x3ee2200efb3400fabb9aacf31297cbdd1d435d47', // ADA
 ]
 
 // minimum liquidity required to count towards tracked volume for pairs with small # of Lps
@@ -70,6 +52,7 @@ export function findEthPerToken(token: Token): BigDecimal {
   if (token.id == WBNB_ADDRESS) {
     return ONE_BD
   }
+  log.info("find eth {}", [token.id])
   // loop through whitelist and check if paired with any
   for (let i = 0; i < WHITELIST.length; ++i) {
     let pairAddress = factoryContract.getPair(Address.fromString(token.id), Address.fromString(WHITELIST[i]))
